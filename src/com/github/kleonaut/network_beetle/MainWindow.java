@@ -13,6 +13,7 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
     private final JFrame frame = new JFrame(App.NAME);
     private final JToggleButton powerButton = new JToggleButton("Enable");
     private static final JTextArea logField = new JTextArea(3, 25);
+    private static int logNumber = 0;
     private final ButtonGroup modeButtons = new ButtonGroup();
     private final List<JButton> viewButtons = new ArrayList<>();
     private final PowerPublisher powerPublisher;
@@ -64,7 +65,10 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
         powerPublisher.unblock();
     }
 
-    public static void addToLog(String text) { logField.setText(" " + text + "\n" + logField.getText()); }
+    public static void addToLog(String text) {
+        logNumber++;
+        logField.setText(" " + logNumber + ": " + text + "\n" + logField.getText());
+    }
 
     public void setVisible(boolean flag) { frame.setVisible(flag); }
 

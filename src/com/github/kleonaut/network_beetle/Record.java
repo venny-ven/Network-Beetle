@@ -26,7 +26,7 @@ public class Record
     public List<Mode> modes() { return modes; }
     public Mode mode(int index) { return modes.get(index); }
     public Mode defaultMode() { return modes.getLast(); }
-    public void setLaunchedOnStartup(boolean flag) { AutorunWriter.setLaunchedOnStartup(flag); }
+    public void setLaunchedOnStartup(boolean flag) { OSInteractions.setIsLaunchedOnStartup(flag); }
 
     public void overwriteModeAt(int index, Mode mode)
     {

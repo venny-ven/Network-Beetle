@@ -1,4 +1,8 @@
-package com.github.kleonaut.network_beetle;
+package deprecated;
+
+import com.github.kleonaut.network_beetle.MainWindow;
+import com.github.kleonaut.network_beetle.NetProfile;
+import com.github.kleonaut.network_beetle.Regex;
 
 import java.io.IOException;
 import java.io.InputStream;

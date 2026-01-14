@@ -80,7 +80,7 @@ public class NetworkWindow
         listModel.addElement(" " + NetProfile.STAY.name());
         listModel.addElement(" " + NetProfile.DISCONNECT.name());
 
-        for (NetProfile profile : Networks.fetchAllProfiles())
+        for (NetProfile profile : OSInteractions.fetchAllNetworkProfiles())
             listModel.addElement(" " + profile.name());
 
         for (int i = 0; i < listModel.size(); i++)

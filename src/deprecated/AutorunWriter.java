@@ -1,4 +1,6 @@
-package com.github.kleonaut.network_beetle;
+package deprecated;
+
+import com.github.kleonaut.network_beetle.Main;
 
 import java.io.File;
 import java.io.IOException;

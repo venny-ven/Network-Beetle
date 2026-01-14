@@ -23,7 +23,7 @@ public class ModePublisher implements PowerObserver
 
     public void update()
     {
-        List<String> tasks = Tasks.fetch();
+        List<String> tasks = OSInteractions.fetchTasks();
         search:
         {
             for (Mode mode : record.modes())
@@ -31,9 +31,11 @@ public class ModePublisher implements PowerObserver
                     for (String task : tasks)
                         if (condition.equals(task))
                         {
+                            MainWindow.addToLog(condition + " detected");
                             publish(mode);
                             break search;
                         }
+            MainWindow.addToLog("no condition detected");
             publish(record.defaultMode());
         }
         timer.setInitialDelay(2000);
@@ -55,11 +57,14 @@ public class ModePublisher implements PowerObserver
     @Override
     public void setPowered(boolean flag)
     {
-        if (flag)
+        if (flag) {
             timer.start();
+            MainWindow.addToLog("Begin search");
+        }
         else
         {
             timer.stop();
+            MainWindow.addToLog("Stopping search");
             publish(null);
         }
     }

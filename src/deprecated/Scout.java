@@ -20,7 +20,7 @@ public class Scout implements PowerObserver
 
     public void run()
     {
-        //for (String task : Tasks.fetch())
+        //for (String task : Tasks.fetchTasks())
         //    for (String condition : record.modeOne.conditions)
         //        if (task.equals(condition)
         //            {

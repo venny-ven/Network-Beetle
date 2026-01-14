@@ -17,23 +17,27 @@ public class NetProfileSwitcher implements ModeObserver
 
     private void verify()
     {
-        if (Networks.fetchNowProfile() != expectedProfile)
+        if (OSInteractions.fetchNowNetworkProfile() != expectedProfile)
         {
             MainWindow.addToLog("Failure to connect to "+ expectedProfile.name());
             powerPublisher.turnOff();
         }
+        else
+            MainWindow.addToLog("Successfully connected");
     }
 
     @Override
     public void setMode(Mode mode)
     {
         verificationTimer.stop();
-        if (mode.netProfile() != Networks.fetchNowProfile())
+        if (mode.netProfile() != OSInteractions.fetchNowNetworkProfile())
         {
-            Networks.setProfile(mode.netProfile());
+            OSInteractions.setNetworkProfile(mode.netProfile());
             expectedProfile = mode.netProfile();
-            if (expectedProfile != NetProfile.STAY && expectedProfile != NetProfile.DISCONNECT)
+            if (expectedProfile != NetProfile.STAY && expectedProfile != NetProfile.DISCONNECT) {
                 verificationTimer.restart();
+                MainWindow.addToLog("Verifying connection");
+            }
         }
     }
 

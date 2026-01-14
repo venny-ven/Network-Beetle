@@ -102,7 +102,7 @@ public class ConditionWindow
         DefaultListModel<String>listModel = (DefaultListModel<String>)possibleConditions.getModel();
         listModel.clear();
 
-        for (String task : Tasks.fetchNoRepeats())
+        for (String task : OSInteractions.fetchTasksNoRepeats())
             listModel.addElement(" " + task);
 
         for (int i = 0; i < listModel.size(); i++)

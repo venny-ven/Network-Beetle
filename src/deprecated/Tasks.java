@@ -1,4 +1,6 @@
-package com.github.kleonaut.network_beetle;
+package deprecated;
+
+import com.github.kleonaut.network_beetle.Regex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +15,7 @@ public class Tasks
     // TODO: try command().startInstant() to filter out all tasks that have no start time
         // such tasks can't be possibly useful; maybe good in combination with sys filter, or instead
     // TODO: use stream.findFirst() to compact all of this
-    // TODO: initialize matchers inside fetch function to make this thread safe yet optimized
+    // TODO: initialize matchers inside fetchTasks function to make this thread safe yet optimized
     private static final Matcher exeMatcher = Regex.EXE_FILE.get().matcher("");
     private static final Matcher winMatcher = Regex.WINDOWS_DIR.get().matcher("");
 
