@@ -3,7 +3,7 @@ package com.github.kleonaut.network_beetle;
 public class App
 {
     public static final String NAME = "Network Beetle";
-    public static final String VERSION = "0.02";
+    public static final String VERSION = "0.03";
 
     public App()
     {
