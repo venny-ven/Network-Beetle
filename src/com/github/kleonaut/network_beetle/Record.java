@@ -57,11 +57,7 @@ public class Record
         for (int c = 0; c < conditionCount; c++)
             conditions.add(registry.get(modeConditionKey(m, c), modeConditionDefault()));
 
-        return new ModeBuilder()
-            .setName(name)
-            .setProfile(profile)
-            .setConditions(conditions)
-            .get();
+        return new Mode(name, profile, conditions);
     }
 
 

@@ -1,4 +1,7 @@
-package com.github.kleonaut.network_beetle;
+package deprecated;
+
+import com.github.kleonaut.network_beetle.Mode;
+import com.github.kleonaut.network_beetle.NetProfile;
 
 import java.util.ArrayList;
 import java.util.List;

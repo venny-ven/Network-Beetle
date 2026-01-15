@@ -89,11 +89,10 @@ public class ModeWindow
 
     public void saveChanges()
     {
-        Mode mode = new ModeBuilder()
-            .setName(record.mode(index).name())
-            .setProfile(NetProfile.get(networkField.getText().trim()))
-            .setConditions(listFromString(conditionField.getText()))
-            .get();
+        Mode mode = new Mode(
+                record.mode(index).name(),
+                NetProfile.get(networkField.getText().trim()),
+                listFromString(conditionField.getText()));
         record.overwriteModeAt(index, mode);
         saveButton.setEnabled(false);
     }
