@@ -31,21 +31,20 @@ public class ModePublisher implements PowerObserver
                     for (String task : tasks)
                         if (condition.equals(task))
                         {
-                            MainWindow.addToLog(condition + " detected");
-                            publish(mode);
+                            publish(mode, condition);
                             break search;
                         }
-            MainWindow.addToLog("no condition detected");
-            publish(record.defaultMode());
+            publish(record.defaultMode(), "no condition");
         }
         timer.setInitialDelay(2000);
         timer.start();
     }
 
-    private void publish(Mode mode)
+    private void publish(Mode mode, String reason)
     {
         if (nowMode != mode)
         {
+            MainWindow.addToLog("Detected " + reason);
             nowMode = mode;
             if (mode == null)
                 for (ModeObserver observer : observers) observer.setModeless();
@@ -60,12 +59,16 @@ public class ModePublisher implements PowerObserver
         if (flag) {
             timer.start();
             MainWindow.addToLog("Begin search");
+
+            // Forces a network scan, a network needs to be scanned before it can be connected to
+            OSInteractions.scanNearbyNetworks();
+            MainWindow.addToLog("Scanned nearby networks");
         }
         else
         {
             timer.stop();
-            MainWindow.addToLog("Stopping search");
-            publish(null);
+            publish(null, "error");
+            MainWindow.addToLog("Stopped search");
         }
     }
 
