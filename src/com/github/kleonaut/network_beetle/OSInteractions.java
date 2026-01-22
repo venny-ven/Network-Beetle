@@ -139,6 +139,13 @@ public class OSInteractions
         else return NetProfile.get(results.getFirst());
     }
 
+    public static void scanNearbyNetworks()
+    {
+        try {
+            Runtime.getRuntime().exec("netsh wlan show interfaces");
+        } catch (IOException e) { throw new RuntimeException(e); }
+    }
+
     public static List<NetProfile> fetchNearbyNetworkProfiles()
     {
         List<NetProfile> nearbyProfiles = new ArrayList<>();
