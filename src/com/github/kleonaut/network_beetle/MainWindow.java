@@ -12,7 +12,7 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
         // current solution: have no miminum size
     private final JFrame frame = new JFrame(App.NAME);
     private final JToggleButton powerButton = new JToggleButton("Enable");
-    private static final JTextArea logField = new JTextArea(3, 25);
+    private static final JTextArea logField = new JTextArea(7, 25);
     private static int logNumber = 0;
     private final ButtonGroup modeButtons = new ButtonGroup();
     private final List<JButton> viewButtons = new ArrayList<>();
