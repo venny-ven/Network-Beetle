@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Network Beetle.iml" filepath="$PROJECT_DIR$/Network Beetle.iml" />
+      <module fileurl="file://$PROJECT_DIR$/network-beetle.iml" filepath="$PROJECT_DIR$/network-beetle.iml" />
     </modules>
   </component>
 </project>
