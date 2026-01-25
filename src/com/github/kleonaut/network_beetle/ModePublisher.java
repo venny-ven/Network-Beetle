@@ -59,10 +59,6 @@ public class ModePublisher implements PowerObserver
         if (flag) {
             timer.start();
             MainWindow.addToLog("Begin search");
-
-            // Forces a network scan, a network needs to be scanned before it can be connected to
-            OSInteractions.scanNearbyNetworks();
-            MainWindow.addToLog("Scanned nearby networks");
         }
         else
         {

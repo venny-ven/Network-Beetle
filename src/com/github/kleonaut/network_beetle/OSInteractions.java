@@ -143,7 +143,7 @@ public class OSInteractions
     public static void scanNearbyNetworks()
     {
         try {
-            Runtime.getRuntime().exec("netsh wlan show interfaces");
+            Runtime.getRuntime().exec("netsh wlan show networks");
         } catch (IOException e) { throw new RuntimeException(e); }
     }
 

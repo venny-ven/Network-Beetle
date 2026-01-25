@@ -32,6 +32,11 @@ public class NetProfileSwitcher implements ModeObserver
         verificationTimer.stop();
         if (mode.netProfile() != OSInteractions.fetchNowNetworkProfile())
         {
+            // Forces a network scan, a Wi-Fi network needs to be scanned before it can be connected to
+            // The return list means that the app will wait for the full readout of networks before continuing
+            OSInteractions.fetchNearbyNetworks();
+            MainWindow.addToLog("Scanned nearby networks");
+
             OSInteractions.setNetworkProfile(mode.netProfile());
             expectedProfile = mode.netProfile();
             if (expectedProfile != NetProfile.STAY && expectedProfile != NetProfile.DISCONNECT) {
