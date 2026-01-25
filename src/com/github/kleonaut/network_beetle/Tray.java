@@ -27,7 +27,7 @@ public class Tray implements PowerObserver, DisposeObserver, ModeObserver
         menu.add(quitButton);
 
         try {
-            BufferedImage image = ImageIO.read(Main.class.getResource("/resources/icon.png"));
+            BufferedImage image = ImageIO.read(Main.class.getResource("/resources/iconTray.png"));
             trayIcon = new TrayIcon(image, App.NAME, menu);
             trayIcon.addActionListener(e -> window.setVisible(true));
             systemTray.add(trayIcon);
