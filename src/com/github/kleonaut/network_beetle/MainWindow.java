@@ -1,7 +1,8 @@
 package com.github.kleonaut.network_beetle;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.GridBagLayout;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -18,6 +19,7 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
     private final List<JButton> viewButtons = new ArrayList<>();
     private final PowerPublisher powerPublisher;
     private final Record record;
+    private final JCheckBox startupCheckbox = new JCheckBox("Run on Windows startup");
 
     public MainWindow(PowerPublisher powerPublisher, Record record)
     {
@@ -48,10 +50,17 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
                       new Constraints(1, i).get());
         }
 
+        // Startup checkbox
+        startupCheckbox.setSelected(record.isLaunchedOnStartup());
+        startupCheckbox.addActionListener(e -> record.toggleLaunchedOnStartup());
+
+        // Add all
         panel.add(logField,
                   new Constraints(0, modes.size()).width(2).stretch().grow().get());
+        panel.add(startupCheckbox,
+                  new Constraints(0, modes.size()+1).width(2).anchor(4).get());
         panel.add(powerButton,
-                  new Constraints(0, modes.size()+1).width(2).insets(10).get());
+                  new Constraints(0, modes.size()+2).width(2).insets(10).get());
 
         frame.setContentPane(panel);
         frame.pack();

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -180,27 +181,23 @@ public class OSInteractions
 
 
     // ================================== REGISTRY FUNCTIONS ==================================
-    // Writing to registry and reading from it
+    // Writing to and deleting from registry
 
-    public static void setIsLaunchedOnStartup(boolean flag)
+    public static void addToStartupApps()
     {
-        if (flag)
-        {
-            try {
-                File jar = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-                String path = jar.getAbsolutePath();
-                Runtime.getRuntime().exec("reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v NetworkBeetle /d \"\\\"" + path + "\\\"\" /f");
-            } catch (IOException | URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else
-        {
-            try {
-                Runtime.getRuntime().exec("reg delete HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v NetworkBeetle /f");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            String pathToExeFile = String.valueOf(Path.of(System.getProperty("java.home")).resolveSibling(App.NAME + ".exe"));
+            if (pathToExeFile.endsWith(".exe")) // Only add to registry if the app is in .exe form
+                Runtime.getRuntime().exec("reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /d \"\\\"" + pathToExeFile + "\\\"\" /f");
+        } catch (IOException e) { throw new RuntimeException(e); }
+    }
+
+    public static void removeFromStartupApps()
+    {
+        try {
+            Runtime.getRuntime().exec("reg delete HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /f");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

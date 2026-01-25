@@ -10,6 +10,7 @@ public class Record
     private final Preferences registry = Preferences.userNodeForPackage(Record.class);
 
     private List<Mode> modes;
+    private boolean isLaunchedOnStartup;
 
     public Record()
     {
@@ -19,14 +20,31 @@ public class Record
         for (int i = 0; i < modeCount; i++)
             list.add(retrieveMode(i));
         modes = List.copyOf(list);
-        setLaunchedOnStartup(true); // for now the app has no autostart setting option
+        isLaunchedOnStartup = retrieveIsLaunchedOnStartup();
     }
 
     // list is ordered with first element as highest priority
     public List<Mode> modes() { return modes; }
     public Mode mode(int index) { return modes.get(index); }
     public Mode defaultMode() { return modes.getLast(); }
-    public void setLaunchedOnStartup(boolean flag) { OSInteractions.setIsLaunchedOnStartup(flag); }
+    public boolean isLaunchedOnStartup() { return isLaunchedOnStartup; }
+    public void toggleLaunchedOnStartup() { setLaunchedOnStartup(!isLaunchedOnStartup); }
+    public void setLaunchedOnStartup(boolean flag)
+    {
+        // Update temporal record variable
+        isLaunchedOnStartup = flag;
+
+        // Update user config in registry
+        overwriteIsLaunchedOnStartup(flag);
+
+        // Update Startup Apps list.
+        // Don't overdo this - only write when the user does it manually
+        if (flag)
+            OSInteractions.addToStartupApps();
+        else
+            OSInteractions.removeFromStartupApps();
+    }
+
 
     public void overwriteModeAt(int index, Mode mode)
     {
@@ -58,6 +76,16 @@ public class Record
             conditions.add(registry.get(modeConditionKey(m, c), modeConditionDefault()));
 
         return new Mode(name, profile, conditions);
+    }
+
+    private boolean retrieveIsLaunchedOnStartup()
+    {
+        return Boolean.parseBoolean(registry.get(launchedKey(), "false"));
+    }
+
+    private void overwriteIsLaunchedOnStartup(boolean flag)
+    {
+        registry.put(launchedKey(), Boolean.toString(flag));
     }
 
 
