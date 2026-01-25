@@ -4,7 +4,7 @@ public class App
 {
     public static final String NAME = "NetworkBeetle";
 
-    public App()
+    public App(boolean isMinimized)
     {
         Record record = new Record();
 
@@ -32,5 +32,6 @@ public class App
         powerPublisher.add(window);
 
         powerPublisher.turnOn();
+        if (!isMinimized) window.setVisible(true);
     }
 }

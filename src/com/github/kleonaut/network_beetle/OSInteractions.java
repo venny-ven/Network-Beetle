@@ -188,7 +188,7 @@ public class OSInteractions
         try {
             String pathToExeFile = String.valueOf(Path.of(System.getProperty("java.home")).resolveSibling(App.NAME + ".exe"));
             if (pathToExeFile.endsWith(".exe")) // Only add to registry if the app is in .exe form
-                Runtime.getRuntime().exec("reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /d \"\\\"" + pathToExeFile + "\\\"\" /f");
+                Runtime.getRuntime().exec("reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /d \"\\\"" + pathToExeFile + "\\\" --minimized\" /f");
         } catch (IOException e) { throw new RuntimeException(e); }
     }
 
