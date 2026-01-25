@@ -50,6 +50,19 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
                       new Constraints(1, i).get());
         }
 
+        // Icons
+        List<Image> iconPack = List.of(
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon16.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon32.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon48.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon64.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon96.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon128.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon192.png")).getImage(),
+                new ImageIcon(getClass().getClassLoader().getResource("resources/icon256.png")).getImage()
+        );
+        frame.setIconImages(iconPack);
+
         // Startup checkbox
         startupCheckbox.setSelected(record.isLaunchedOnStartup());
         startupCheckbox.addActionListener(e -> record.toggleLaunchedOnStartup());
