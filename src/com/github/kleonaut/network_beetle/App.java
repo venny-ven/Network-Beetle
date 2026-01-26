@@ -12,26 +12,34 @@ public class App
         PowerPublisher powerPublisher = new PowerPublisher();
         DisposePublisher disposePublisher = new DisposePublisher();
 
-        MainWindow window = new MainWindow(powerPublisher, record);
-        Tray tray = new Tray(window, powerPublisher, disposePublisher);
+        MainWindow mainWindow = new MainWindow(powerPublisher, record);
+        Tray tray = new Tray(mainWindow, powerPublisher, disposePublisher);
         NetProfileSwitcher netSwitcher = new NetProfileSwitcher(powerPublisher);
 
         // objects will switch mode in this order
-        modePublisher.add(window);
+        modePublisher.add(mainWindow);
         modePublisher.add(netSwitcher);
         modePublisher.add(tray);
 
         // objects will be disposed of in this order
         disposePublisher.add(powerPublisher);
         disposePublisher.add(tray);
-        disposePublisher.add(window);
+        disposePublisher.add(mainWindow);
 
         // objects will be powered in this order
         powerPublisher.add(modePublisher);
         powerPublisher.add(tray);
-        powerPublisher.add(window);
+        powerPublisher.add(mainWindow);
 
-        powerPublisher.turnOn();
-        if (!isMinimized) window.setVisible(true);
+        if (isMinimized)
+        {
+            // Auto-start if running minimized
+            powerPublisher.turnOn();
+        } else
+        {
+            // Splash screen brings up the main window after a few seconds
+            SplashScreen splashScreen = new SplashScreen(mainWindow);
+            splashScreen.beginSplash();
+        }
     }
 }
