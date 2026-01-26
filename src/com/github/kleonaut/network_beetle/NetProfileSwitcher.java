@@ -10,7 +10,7 @@ public class NetProfileSwitcher implements ModeObserver
 
     public NetProfileSwitcher(PowerPublisher powerPublisher)
     {
-        verificationTimer = new Timer(5000, e -> verify());
+        verificationTimer = new Timer(App.VERIFICATION_DELAY, e -> verify());
         verificationTimer.setRepeats(false);
         this.powerPublisher = powerPublisher;
     }
@@ -23,7 +23,7 @@ public class NetProfileSwitcher implements ModeObserver
             powerPublisher.turnOff();
         }
         else
-            MainWindow.addToLog("Successfully connected");
+            MainWindow.addToLog("Successfully connected to " + expectedProfile.name());
     }
 
     @Override
@@ -34,7 +34,6 @@ public class NetProfileSwitcher implements ModeObserver
         {
             // Forces a network scan, a Wi-Fi network needs to be scanned before it can be connected to
             OSInteractions.scanNearbyNetworks();
-            MainWindow.addToLog("Scanned nearby networks");
 
             OSInteractions.setNetworkProfile(mode.netProfile());
             expectedProfile = mode.netProfile();
@@ -42,6 +41,13 @@ public class NetProfileSwitcher implements ModeObserver
                 verificationTimer.restart();
                 MainWindow.addToLog("Verifying connection");
             }
+        } else {
+            if (mode.netProfile() == NetProfile.DISCONNECT)
+                MainWindow.addToLog("Already disconnected");
+            else if (mode.netProfile() == NetProfile.STAY)
+                MainWindow.addToLog("Remaining on the same network");
+            else
+                MainWindow.addToLog("Already connected to " + mode.netProfile().name());
         }
     }
 

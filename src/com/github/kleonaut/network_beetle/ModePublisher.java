@@ -14,7 +14,7 @@ public class ModePublisher implements PowerObserver
     ModePublisher(Record record)
     {
         this.record = record;
-        timer = new Timer(2000, e -> update());
+        timer = new Timer(App.SEARCH_DELAY, e -> update());
         timer.setInitialDelay(0);
         timer.setRepeats(false);
     }
@@ -31,25 +31,33 @@ public class ModePublisher implements PowerObserver
                     for (String task : tasks)
                         if (condition.equals(task))
                         {
-                            publish(mode, condition);
-                            break search;
+                            if (nowMode != mode)
+                            {
+                                MainWindow.addToLog(condition + " detected");
+                                publish(mode);
+                            }
+                            break search; // If mode is already correct, just break search and not publish changes
                         }
-            publish(record.defaultMode(), "no condition");
+            if (nowMode != record.defaultMode())
+            {
+                MainWindow.addToLog("No condition detected");
+                publish(record.defaultMode());
+            }
         }
-        timer.setInitialDelay(2000);
+        timer.setInitialDelay(App.SEARCH_DELAY);
         timer.start();
     }
 
-    private void publish(Mode mode, String reason)
+    private void publish(Mode mode)
     {
-        if (nowMode != mode)
+        nowMode = mode;
+        if (mode == null)
+            for (ModeObserver observer : observers) observer.setModeless();
+        else
         {
-            MainWindow.addToLog("Detected " + reason);
-            nowMode = mode;
-            if (mode == null)
-                for (ModeObserver observer : observers) observer.setModeless();
-            else
-                for (ModeObserver observer : observers) observer.setMode(mode);
+            MainWindow.addToLog("Switched to " + mode.name());
+            for (ModeObserver observer : observers) observer.setMode(mode);
+
         }
     }
 
@@ -58,18 +66,16 @@ public class ModePublisher implements PowerObserver
     {
         if (flag) {
             timer.start();
-            MainWindow.addToLog("Begin search");
+            MainWindow.addToLog("Started search");
         }
         else
         {
             timer.stop();
-            publish(null, "error");
+            publish(null);
             MainWindow.addToLog("Stopped search");
         }
     }
 
     @Override
     public void setPowerBlocked(boolean flag) { }
-
-    //public void setModeless() { publish(null); }
 }

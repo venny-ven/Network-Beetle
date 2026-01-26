@@ -101,7 +101,7 @@ public class OSInteractions
     {
         if (profile == NetProfile.STAY)
         {
-            MainWindow.addToLog("Remaining on the same network");
+            MainWindow.addToLog("Remaining on the current network");
             return;
         }
         try {
@@ -144,6 +144,7 @@ public class OSInteractions
     {
         try {
             Runtime.getRuntime().exec("netsh wlan show networks");
+            MainWindow.addToLog("Scanned nearby networks");
         } catch (IOException e) { throw new RuntimeException(e); }
     }
 
@@ -189,6 +190,7 @@ public class OSInteractions
             String pathToExeFile = String.valueOf(Path.of(System.getProperty("java.home")).resolveSibling(App.NAME + ".exe"));
             if (pathToExeFile.endsWith(".exe")) // Only add to registry if the app is in .exe form
                 Runtime.getRuntime().exec("reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /d \"\\\"" + pathToExeFile + "\\\" --minimized\" /f");
+            MainWindow.addToLog("Added to startup apps");
         } catch (IOException e) { throw new RuntimeException(e); }
     }
 
@@ -196,6 +198,7 @@ public class OSInteractions
     {
         try {
             Runtime.getRuntime().exec("reg delete HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v "+App.NAME+" /f");
+            MainWindow.addToLog("Removed from startup apps");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
