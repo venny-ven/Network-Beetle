@@ -3,7 +3,7 @@ package com.github.kleonaut.network_beetle;
 public class App
 {
     public static final String NAME = "NetworkBeetle";
-    public static final int MAX_LOG_LENGTH = 200;
+    public static final int MAX_LOG_LENGTH = 800;
     public static final int VERIFICATION_DELAY = 5000;
     public static final int SEARCH_DELAY = 2000;
 
