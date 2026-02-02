@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Build &amp; run" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.github.kleonaut.network_beetle.Main" />
+    <module name="network-beetle" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
