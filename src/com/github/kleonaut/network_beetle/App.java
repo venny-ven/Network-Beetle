@@ -6,7 +6,7 @@ public class App
     public static final int MAX_LOG_CHAR_LENGTH = 3000;
     public static final int VERIFY_CONNECTION_DELAY = 5000;
     public static final int SEARCH_PROCESSES_DELAY = 2000;
-    public static final int MAX_RECONNECT_ATTEMPTS = 1;
+    public static final int MAX_RECONNECT_ATTEMPTS = 2;
 
     public App(boolean isMinimized)
     {
