@@ -3,9 +3,10 @@ package com.github.kleonaut.network_beetle;
 public class App
 {
     public static final String NAME = "NetworkBeetle";
-    public static final int MAX_LOG_LENGTH = 800;
-    public static final int VERIFICATION_DELAY = 5000;
-    public static final int SEARCH_DELAY = 2000;
+    public static final int MAX_LOG_CHAR_LENGTH = 3000;
+    public static final int VERIFY_CONNECTION_DELAY = 5000;
+    public static final int SEARCH_PROCESSES_DELAY = 2000;
+    public static final int MAX_RECONNECT_ATTEMPTS = 1;
 
     public App(boolean isMinimized)
     {

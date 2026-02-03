@@ -5,25 +5,37 @@ import javax.swing.Timer;
 public class NetProfileSwitcher implements ModeObserver
 {
     private final Timer verificationTimer;
-    private NetProfile expectedProfile;
+    private Mode expectedMode;
     private final PowerPublisher powerPublisher;
+    private int attemptCount = 0;
 
     public NetProfileSwitcher(PowerPublisher powerPublisher)
     {
-        verificationTimer = new Timer(App.VERIFICATION_DELAY, e -> verify());
+        verificationTimer = new Timer(App.VERIFY_CONNECTION_DELAY, e -> verify());
         verificationTimer.setRepeats(false);
         this.powerPublisher = powerPublisher;
     }
 
     private void verify()
     {
-        if (OSInteractions.fetchNowNetworkProfile() != expectedProfile)
+        if (OSInteractions.fetchNowNetworkProfile() == expectedMode.netProfile())
         {
-            MainWindow.addToLog("Failure to connect to "+ expectedProfile.name());
+            MainWindow.addToLog("Successfully connected to " + expectedMode.netProfile().name());
+            return;
+        }
+
+        MainWindow.addToLog("Failure to connect to " + expectedMode.netProfile().name());
+
+        if (attemptCount >= App.MAX_RECONNECT_ATTEMPTS) {
+            MainWindow.addToLog("Maximum reconnect attempts reached");
+            attemptCount = 0;
             powerPublisher.turnOff();
         }
-        else
-            MainWindow.addToLog("Successfully connected to " + expectedProfile.name());
+        else {
+            attemptCount++;
+            MainWindow.addToLog("Trying again...");
+            setMode(expectedMode);
+        }
     }
 
     @Override
@@ -36,10 +48,10 @@ public class NetProfileSwitcher implements ModeObserver
             OSInteractions.scanNearbyNetworks();
 
             OSInteractions.setNetworkProfile(mode.netProfile());
-            expectedProfile = mode.netProfile();
-            if (expectedProfile != NetProfile.STAY && expectedProfile != NetProfile.DISCONNECT) {
+            expectedMode = mode;
+            if (mode.netProfile() != NetProfile.STAY && mode.netProfile() != NetProfile.DISCONNECT) {
                 verificationTimer.restart();
-                MainWindow.addToLog("Verifying connection");
+                MainWindow.addToLog("Verifying connection (Attempt #" + (attemptCount + 1) + ")");
             }
         } else {
             if (mode.netProfile() == NetProfile.DISCONNECT)

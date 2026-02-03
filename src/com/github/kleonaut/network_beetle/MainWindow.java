@@ -1,6 +1,5 @@
 package com.github.kleonaut.network_beetle;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -93,11 +92,11 @@ public class MainWindow implements PowerObserver, DisposeObserver, ModeObserver
         logNumber++;
         Document doc = logField.getDocument();
         try {
-            doc.insertString(0, " " + logNumber + ": " + text + "\n", null);
+            doc.insertString(0, " " + logNumber + ": " + text.trim() + "\n", null);
 
             // Erase log to avoid memory hog
-            if (doc.getLength() > App.MAX_LOG_LENGTH)
-                doc.remove(App.MAX_LOG_LENGTH, doc.getLength() - App.MAX_LOG_LENGTH);
+            if (doc.getLength() > App.MAX_LOG_CHAR_LENGTH)
+                doc.remove(App.MAX_LOG_CHAR_LENGTH, doc.getLength() - App.MAX_LOG_CHAR_LENGTH);
 
         } catch (BadLocationException e) {
             throw new RuntimeException(e);

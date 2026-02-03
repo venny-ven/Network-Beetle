@@ -14,7 +14,7 @@ public class ModePublisher implements PowerObserver
     ModePublisher(Record record)
     {
         this.record = record;
-        timer = new Timer(App.SEARCH_DELAY, e -> update());
+        timer = new Timer(App.SEARCH_PROCESSES_DELAY, e -> update());
         timer.setInitialDelay(0);
         timer.setRepeats(false);
     }
@@ -44,7 +44,7 @@ public class ModePublisher implements PowerObserver
                 publish(record.defaultMode());
             }
         }
-        timer.setInitialDelay(App.SEARCH_DELAY);
+        timer.setInitialDelay(App.SEARCH_PROCESSES_DELAY);
         timer.start();
     }
 

@@ -1,9 +1,8 @@
 package com.github.kleonaut.network_beetle;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,34 +98,30 @@ public class OSInteractions
 
     public static void setNetworkProfile(NetProfile profile)
     {
-        if (profile == NetProfile.STAY)
-        {
+        if (profile == NetProfile.STAY) {
             MainWindow.addToLog("Remaining on the current network");
             return;
         }
-        try {
-            if (profile == NetProfile.DISCONNECT)
-            {
-                Runtime.getRuntime().exec("netsh wlan disconnect");
-                MainWindow.addToLog("Disconnecting from the Internet");
-            }
-            else
-            {
-                Runtime.getRuntime().exec("netsh wlan connect name=\"" + profile.name() + "\"");
-                MainWindow.addToLog("Connecting to "+profile.name());
-            }
-        } catch (IOException e) { throw new RuntimeException(e); }
+        if (profile == NetProfile.DISCONNECT) {
+            MainWindow.addToLog("Disconnecting from the Internet...");
+            MainWindow.addToLog(runAndRead("netsh","wlan","disconnect"));
+
+        }
+        else {
+            MainWindow.addToLog("Connecting to "+profile.name()+"...");
+            MainWindow.addToLog(runAndRead("netsh","wlan","connect","name=\""+profile.name()+"\""));
+        }
     }
 
     // TODO: make this work with hidden networks too
     public static List<String> fetchNearbyNetworks()
     {
-        return runAndParse("netsh wlan show networks", Regex.SSID);
+        return runAndFilter(Regex.SSID, "netsh","wlan","show","networks");
     }
 
     public static List<NetProfile> fetchAllNetworkProfiles()
     {
-        List<String> results = runAndParse("netsh wlan show profiles", Regex.ALL_PROFILES);
+        List<String> results = runAndFilter(Regex.ALL_PROFILES, "netsh","wlan","show","profiles");
         List<NetProfile> profiles = new ArrayList<>();
         for (String item : results)
             profiles.add(NetProfile.get(item));
@@ -135,17 +130,15 @@ public class OSInteractions
 
     public static NetProfile fetchNowNetworkProfile()
     {
-        List<String> results = runAndParse("netsh wlan show interfaces", Regex.PROFILE);
+        List<String> results = runAndFilter(Regex.PROFILE, "netsh","wlan","show","interfaces");
         if (results.isEmpty()) return NetProfile.DISCONNECT;
         else return NetProfile.get(results.getFirst());
     }
 
     public static void scanNearbyNetworks()
     {
-        try {
-            Runtime.getRuntime().exec("netsh wlan show networks");
-            MainWindow.addToLog("Scanned nearby networks");
-        } catch (IOException e) { throw new RuntimeException(e); }
+        MainWindow.addToLog("Scanned nearby networks");
+        runAndRead("netsh","wlan","show","networks");
     }
 
     public static List<NetProfile> fetchNearbyNetworkProfiles()
@@ -162,21 +155,82 @@ public class OSInteractions
         return nearbyProfiles;
     }
 
-    private static List<String> runAndParse(String command, Regex rgx)
+    private static List<String> runAndFilter(Regex rgx, String... command)
     {
         List<String> results = new ArrayList<>();
+
         try {
-            Process netshProcess = Runtime.getRuntime().exec(command);
-            try (
-                    InputStream byteIn = netshProcess.getInputStream();
-                    Scanner scanner = new Scanner(byteIn).useDelimiter(rgx.NEWLINE.get());
-            ) {
+            // Execute shell command
+            Process shellProcess = Runtime.getRuntime().exec(command);
+
+            // Drain message streams
+            try (InputStream mainStream = shellProcess.getInputStream();
+                 Scanner scanner = new Scanner(mainStream).useDelimiter(Regex.NEWLINE.get());
+                 InputStream errorStream = shellProcess.getErrorStream())
+            {
                 // search for something like "Profile : " pattern with no limit (horizon=0)
                 while (scanner.findWithinHorizon(rgx.get(), 0) != null)
                     results.add(scanner.next().trim());
+
+                String errorMessage = new String(errorStream.readAllBytes(), StandardCharsets.UTF_8);
+                if (!errorMessage.isBlank())
+                    MainWindow.addToLog(("Shell error message: " + (errorMessage)));
             }
-        } catch (IOException e) { throw new RuntimeException(e); }
+
+            // Wait for process termination. This line suspends main thread
+            int exitCode = shellProcess.waitFor();
+            if (exitCode != 0)
+            {
+                MainWindow.addToLog("!!! Shell exit code: " + exitCode + " !!!");
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) { // Occurs if waitFor() fails
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+
         return List.copyOf(results);
+    }
+
+    private static String runAndRead(String... command)
+    {
+        String output;
+
+        try {
+            // Execute shell command
+            Process shellProcess = Runtime.getRuntime().exec(command);
+
+            // Drain message streams
+            try (InputStream mainStream = shellProcess.getInputStream();
+                 InputStream errorStream = shellProcess.getErrorStream())
+            {
+                String mainMessage = new String(mainStream.readAllBytes(), StandardCharsets.UTF_8);
+                if (!mainMessage.isBlank())
+                    output = "Shell reply: " + mainMessage;
+                else
+                    output = "Shell reply empty";
+
+                String errorMessage = new String(errorStream.readAllBytes(), StandardCharsets.UTF_8);
+                if (!errorMessage.isBlank())
+                    MainWindow.addToLog("Shell error message: " + errorMessage);
+            }
+
+            // Wait for process termination. This line suspends main thread
+            int exitCode = shellProcess.waitFor();
+            if (exitCode != 0) {
+                MainWindow.addToLog("!!! Shell exit code: " + exitCode + " !!!");
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) { // Occurs if waitFor() fails
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+
+        return output;
     }
 
 
