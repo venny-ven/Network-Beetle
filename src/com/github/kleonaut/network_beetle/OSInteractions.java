@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -37,36 +38,6 @@ public class OSInteractions
 
     public static List<String> fetchTasks()
     {
-        List<String> tasks = new ArrayList<>();
-        ProcessHandle[] handles = getProcessHandles();
-        for (ProcessHandle handle : handles)
-            tasks.add(taskOfHandle(handle));
-        return tasks;
-    }
-
-    public static List<String> fetchTasksNoRepeats()
-    {
-        List<String> tasks = fetchTasks();
-        for (int i = 0; i < tasks.size(); i++)
-            for (int k = i+1; k < tasks.size(); k++)
-                while (k < tasks.size() && tasks.get(i).equals(tasks.get(k)))
-                    tasks.remove(k);
-        return tasks;
-    }
-
-//    private static ProcessHandle[] getProcessHandles()
-//    {
-//        return ProcessHandle.allProcesses()
-//                // processes that have a 'command' property (executable path)
-//                .filter(handle -> handle.info().command().isPresent())
-//                // processes that are not in 'C:\Windows\' directory
-//                .filter(handle -> !winMatcher.reset(handle.info().command().get()).find())
-//                // convert stream to array
-//                .toArray(ProcessHandle[]::new);
-//    }
-
-    private static ProcessHandle[] getProcessHandles()
-    {
         // The pattern below uses stream manipulations to make an efficient filter
         // Previously I used successive filter() stream operators
         // But after each successive filter some processes die while my code still thinks they exist
@@ -81,37 +52,33 @@ public class OSInteractions
                 // Depending on whether the handle passed the required checks or not
                 .flatMap(handle ->
                 {
-                    // Extract the path into an Optional
-                    Optional<String> exePath = handle.info().command();
-                    // If path exists (process started after boot) and is not a C:\Windows\ path
-                    if (exePath.isPresent() && !winMatcher.reset(exePath.get()).find()) {
-                        // Keep the handle
-                        return Stream.of(handle);
-                    }
-                    // Else discard the handle
-                    return Stream.empty();
+                    // Extract the path into an Optional. In Java Processes, the path of exe file is called "command"
+                    // If path doesn't exist (process started after boot), return empty stream
+                    Optional<String> command = handle.info().command();
+                    if (command.isEmpty()) return Stream.empty();
+
+                    // Convert path from optional into a string
+                    // If path is a C:\Windows\ path, return empty stream
+                    String exePath = command.get();
+                    if (winMatcher.reset(exePath).find()) return Stream.empty();
+
+                    // Return just the end portion of the path, the .exe file name
+                    exeMatcher.reset(exePath);
+                    if (!exeMatcher.find()) return Stream.empty(); // Just in case. This condition should never occur
+                    return Stream.of(exeMatcher.group().toLowerCase(Locale.ENGLISH));
                 })
                 // Turn stream into an array
-                .toArray(ProcessHandle[]::new);
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private static String taskOfHandle(ProcessHandle handle)
+    public static List<String> fetchTasksNoRepeats()
     {
-        // supply full executable path to matcher to parse out just the executable name
-        exeMatcher.reset(handle.info().command().get());
-        if (exeMatcher.find())
-            // matcher.group() is the matching string
-            return exeMatcher.group().toLowerCase(Locale.ENGLISH);
-        throw new MatchException("Match not found", null);
-    }
-
-    private static ProcessHandle handleOf(String task) throws Exception
-    {
-        ProcessHandle[] handles = getProcessHandles();
-        for (ProcessHandle handle : handles)
-            if (taskOfHandle(handle).equals(task))
-                return handle;
-        throw new Exception("Handle with executable name "+task+" not found");
+        List<String> tasks = fetchTasks();
+        for (int i = 0; i < tasks.size(); i++)
+            for (int k = i+1; k < tasks.size(); k++)
+                while (k < tasks.size() && tasks.get(i).equals(tasks.get(k)))
+                    tasks.remove(k);
+        return tasks;
     }
 
 
@@ -132,12 +99,12 @@ public class OSInteractions
         }
         if (profile == NetProfile.DISCONNECT) {
             MainWindow.addToLog("Disconnecting from the Internet...");
-            MainWindow.addToLog(runAndRead("netsh","wlan","disconnect"));
+            MainWindow.addToLog(runAndCollect("netsh","wlan","disconnect"));
 
         }
         else {
             MainWindow.addToLog("Connecting to "+profile.name()+"...");
-            MainWindow.addToLog(runAndRead("netsh","wlan","connect","name=\""+profile.name()+"\""));
+            MainWindow.addToLog(runAndCollect("netsh","wlan","connect","name="+profile.name()));
         }
     }
 
@@ -166,7 +133,7 @@ public class OSInteractions
     public static void scanNearbyNetworks()
     {
         MainWindow.addToLog("Scanned nearby networks");
-        runAndRead("netsh","wlan","show","networks");
+        runAndCollect("netsh","wlan","show","networks");
     }
 
     public static List<NetProfile> fetchNearbyNetworkProfiles()
@@ -187,78 +154,66 @@ public class OSInteractions
     {
         List<String> results = new ArrayList<>();
 
-        try {
-            // Execute shell command
-            Process shellProcess = Runtime.getRuntime().exec(command);
-
-            // Drain message streams
-            try (InputStream mainStream = shellProcess.getInputStream();
-                 Scanner scanner = new Scanner(mainStream).useDelimiter(Regex.NEWLINE.get());
-                 InputStream errorStream = shellProcess.getErrorStream())
+        runShell((output) -> // Run lambda that generates a shell process and insert stream operations over its output
+        {
+            // Read the stream line by line with a Scanner
+            try (Scanner scanner = new Scanner(output, StandardCharsets.UTF_8).useDelimiter(Regex.NEWLINE.get()))
             {
-                // search for something like "Profile : " pattern with no limit (horizon=0)
-                while (scanner.findWithinHorizon(rgx.get(), 0) != null)
-                    results.add(scanner.next().trim());
-
-                String errorMessage = new String(errorStream.readAllBytes(), StandardCharsets.UTF_8);
-                if (!errorMessage.isBlank())
-                    MainWindow.addToLog(("Shell error message: " + (errorMessage)));
+                // Search for something like "Profile : " pattern with no limit (horizon=0)
+                while (scanner.findWithinHorizon(rgx.get(), 0) != null) {
+                    if (scanner.hasNext()) {
+                        results.add(scanner.next().trim());
+                    }
+                }
             }
+        }, command); // Command that starts the shell process
 
-            // Wait for process termination. This line suspends main thread
-            int exitCode = shellProcess.waitFor();
-            if (exitCode != 0)
-            {
-                MainWindow.addToLog("!!! Shell exit code: " + exitCode + " !!!");
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) { // Occurs if waitFor() fails
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        }
-
+        // Turn to immutable list
         return List.copyOf(results);
     }
 
-    private static String runAndRead(String... command)
+    private static String runAndCollect(String... command)
     {
-        String output;
+        final String[] result = new String[1]; // Lambda requires effectively final variable, I wrap String with an array
 
+        runShell((stream) -> { // Run lambda that generates a shell process and insert stream operations over its output
+            String message = new String(stream.readAllBytes(), StandardCharsets.UTF_8); // Turn stream into a string
+            result[0] = message.isBlank() ? "Shell reply empty" : "Shell reply: "+message;
+        }, command); // Command that starts the shell process
+
+        return result[0];
+    }
+
+    private static void runShell(StreamConsumer consumer, String... command)
+    {
         try {
-            // Execute shell command
-            Process shellProcess = Runtime.getRuntime().exec(command);
+            ProcessBuilder builder = new ProcessBuilder(command); // Create a process factory with my command
+            builder.redirectErrorStream(true); // Merge stderr into stdout to create one stream, prevents reading deadlocks
+            Process shellProcess = builder.start(); // Execute shell command - start the process
 
-            // Drain message streams
-            try (InputStream mainStream = shellProcess.getInputStream();
-                 InputStream errorStream = shellProcess.getErrorStream())
-            {
-                String mainMessage = new String(mainStream.readAllBytes(), StandardCharsets.UTF_8);
-                if (!mainMessage.isBlank())
-                    output = "Shell reply: " + mainMessage;
-                else
-                    output = "Shell reply empty";
-
-                String errorMessage = new String(errorStream.readAllBytes(), StandardCharsets.UTF_8);
-                if (!errorMessage.isBlank())
-                    MainWindow.addToLog("Shell error message: " + errorMessage);
+            // Receive custom stream operations here
+            try (InputStream stream = shellProcess.getInputStream()) {
+                consumer.accept(stream);
             }
 
-            // Wait for process termination. This line suspends main thread
-            int exitCode = shellProcess.waitFor();
+            int exitCode = shellProcess.waitFor(); // Wait for process termination. This line suspends main thread
+            // Exit code is logged only when process terminated wrong
             if (exitCode != 0) {
                 MainWindow.addToLog("!!! Shell exit code: " + exitCode + " !!!");
             }
 
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch (InterruptedException e) { // Occurs if waitFor() fails
-            Thread.currentThread().interrupt();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // Occurs if waitFor() fails, therefore neccessary
             throw new RuntimeException(e);
         }
+    }
 
-        return output;
+    // This is a Consumer pattern but custom and capable of throwing an exception
+    @FunctionalInterface
+    private interface StreamConsumer {
+        void accept(InputStream inputStream) throws IOException;
     }
 
 
