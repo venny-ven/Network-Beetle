@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 
 // Static utility class that acts as a wrapper around Windows Shell commands and other OS interactions.
@@ -56,14 +54,44 @@ public class OSInteractions
         return tasks;
     }
 
+//    private static ProcessHandle[] getProcessHandles()
+//    {
+//        return ProcessHandle.allProcesses()
+//                // processes that have a 'command' property (executable path)
+//                .filter(handle -> handle.info().command().isPresent())
+//                // processes that are not in 'C:\Windows\' directory
+//                .filter(handle -> !winMatcher.reset(handle.info().command().get()).find())
+//                // convert stream to array
+//                .toArray(ProcessHandle[]::new);
+//    }
+
     private static ProcessHandle[] getProcessHandles()
     {
+        // The pattern below uses stream manipulations to make an efficient filter
+        // Previously I used successive filter() stream operators
+        // But after each successive filter some processes die while my code still thinks they exist
+        // This method is more reliable
+
+        // Access a stream, the stream contains a snapshot list of current processes
         return ProcessHandle.allProcesses()
-                // processes that have a 'command' property (executable path)
-                .filter(handle -> handle.info().command().isPresent())
-                // processes that are not in 'C:\Windows\' directory
-                .filter(handle -> !winMatcher.reset(handle.info().command().get()).find())
-                // convert stream to array
+                // flatMap() is stream operation
+                // It maps each element to a stream (transforms it into a stream). The stream is defined in { }
+                // Then flattens back to a single stream
+                // In my case each handle is mapped to a stream of that handle or to an empty stream
+                // Depending on whether the handle passed the required checks or not
+                .flatMap(handle ->
+                {
+                    // Extract the path into an Optional
+                    Optional<String> exePath = handle.info().command();
+                    // If path exists (process started after boot) and is not a C:\Windows\ path
+                    if (exePath.isPresent() && !winMatcher.reset(exePath.get()).find()) {
+                        // Keep the handle
+                        return Stream.of(handle);
+                    }
+                    // Else discard the handle
+                    return Stream.empty();
+                })
+                // Turn stream into an array
                 .toArray(ProcessHandle[]::new);
     }
 
