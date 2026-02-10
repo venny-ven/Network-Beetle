@@ -67,5 +67,6 @@ public class NetProfileSwitcher implements ModeObserver
     public void setModeless()
     {
         verificationTimer.stop();
+        attemptCount = 0;
     }
 }
